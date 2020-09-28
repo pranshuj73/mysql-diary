@@ -3,6 +3,8 @@ from tkinter.scrolledtext import ScrolledText
 from PIL import ImageTk, Image
 from datetime import datetime
 
+import db
+
 
 class Andy(Tk):
 	def __init__(self):
@@ -105,16 +107,16 @@ class DiaryCreateFrame(Frame):
 
 		def tick():
 			time = datetime.now()
-			time_delay = 60 - int(time.strftime('%S'))
 			date_label.configure(text=time.strftime('%d'))
 			month_label.configure(text=time.strftime('%b'))
 			day_label.configure(text=time.strftime('%a'))
 			time_label.configure(text=time.strftime('%H:%M:%S'))
-			time_label.after(time_delay, tick)
+			time_label.after(100, tick)
 
 		tick()
 
-		mood_label = Label(self, text="How did your day go?", anchor="w").grid(row=3, column=0, sticky='nesw', padx=25, columnspan=5, pady=(30, 0))
+		self.mood_label = Label(self, text="How did your day go?", anchor="w")
+		self.mood_label.grid(row=3, column=0, sticky='nesw', padx=25, columnspan=5, pady=(30, 0))
 
 		self.var = IntVar()
 		mood_1 = ImageTk.PhotoImage(Image.open("assets/mood-1.png").resize((30, 30), Image.ANTIALIAS))
@@ -133,7 +135,8 @@ class DiaryCreateFrame(Frame):
 		# title_label = Label(self, text="Title", anchor="w").grid(row=3, column=0, sticky='nesw', padx=25, pady=(25, 0), columnspan=5)
 		# title_field = Entry(self, textvariable=self.title).grid(row=4, column=0, sticky='nesw', padx=25, pady=(0,20), columnspan=5)
 
-		entry_label = Label(self, text="Entry", anchor="w").grid(row=6, column=0, sticky='nesw', padx=25, columnspan=5)
+		self.entry_label = Label(self, text="Entry", anchor="w")
+		self.entry_label.grid(row=6, column=0, sticky='nesw', padx=25, columnspan=5)
 		self.entry_field = ScrolledText(self, height=10, width=10)
 		self.entry_field.grid(row=7, column=0, sticky='nesw', padx=25, pady=(0,20), columnspan=5)
 
@@ -142,13 +145,21 @@ class DiaryCreateFrame(Frame):
 		save_btn.grid(pady=20, columnspan=5)
 
 	def save_entry(self):
-		print("function works!!")
+		if self.var.get() == 0 or self.entry_field.get("1.0", "end-1c") == "":
+			if self.var.get() == 0:
+				self.mood_label.configure(text="How did your day go? [*Please select an option]")
+			if self.entry_field.get("1.0", "end-1c") == "":
+				self.entry_label.configure(text="Entry [*Please type something here]")
+		else:
+			self.mood_label.configure(text="How did your day go?")
+			self.entry_label.configure(text="Entry")
 
-		print(self.var.get())
-		print(self.entry_field.get("1.0", "end-1c"))
+			present_time = datetime.now()
+			ftime = present_time.strftime("%Y-%m-%d %H:%M:%S")
+			db.create_entry(self.var.get(), self.entry_field.get("1.0", "end-1c"), ftime)
 
-		self.var.set(None)
-		self.entry_field.delete("1.0", "end-1c")
+			self.var.set(0)
+			self.entry_field.delete("1.0", "end-1c")
 
 
 
