@@ -14,8 +14,8 @@ def create_entry(mood: int,  entry: str, dt: str):
 	cur.execute(f'INSERT INTO diary(mood, entry, dt) values({mood}, "{entry}", "{dt}");')
 	db.commit()
 
-def fetch_entries():
-	cur.execute("select * from diary;")
+def fetch_entries(date):
+	cur.execute(f"select * from diary where dt like '{date}%' order by dt desc;")
 	records = [record for record in cur]
 	return records
 

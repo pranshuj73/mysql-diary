@@ -1,5 +1,6 @@
 from tkinter import *
 from tkinter.scrolledtext import ScrolledText
+from tkcalendar import Calendar, DateEntry
 from PIL import ImageTk, Image
 from datetime import datetime
 
@@ -9,7 +10,11 @@ import db
 class Andy(Tk):
 	def __init__(self):
 		Tk.__init__(self)
+		global andy
+
 		self.minsize(500, 500)
+		andy = ImageTk.PhotoImage(Image.open("assets/Andy.png").resize((313, 252), Image.ANTIALIAS))
+		self.call('wm', 'iconphoto', self._w, andy)
 		self.title("Andy - Diary & To-Do")
 		container = Frame(self)
 		container.pack(side="top", fill="both", expand=True)
@@ -17,7 +22,7 @@ class Andy(Tk):
 		container.grid_columnconfigure(0, weight=1)
 
 		self.frames = {}
-		for frame_page in (Homescreen, DiaryFrame, DiaryCreateFrame):
+		for frame_page in (Homescreen, DiaryFrame, DiaryCreateFrame, EntryListFrame):
 			page_name = frame_page.__name__
 			frame = frame_page(parent=container, controller=self)
 			self.frames[page_name] = frame
@@ -31,17 +36,17 @@ class Andy(Tk):
 		frame = self.frames[page_name]
 		frame.tkraise()
 
+	def update_entry_list(self, date):
+		frame = self.frames["EntryListFrame"]
+		frame.load_content(date)
 
 
 class Homescreen(Frame):
 	def __init__(self, parent, controller):
 		Frame.__init__(self, parent)
-		self.controller = controller
 
-		global andy, diary_img, todo_img
+		global diary_img, todo_img
 
-		andy_img = Image.open("assets/Andy.png").resize((313, 252), Image.ANTIALIAS)
-		andy = ImageTk.PhotoImage(andy_img)
 		image = Label(self, image=andy, text="Hii, my name is Andy, your personal diary and to-do app. ^_^", compound="top")
 		image.pack()
 
@@ -58,6 +63,7 @@ class DiaryFrame(Frame):
 	def __init__(self, parent, controller):
 		Frame.__init__(self, parent)
 		self.controller = controller
+		self.parent = parent
 
 		global back_img, create_img
 
@@ -73,15 +79,26 @@ class DiaryFrame(Frame):
 
 		create_img = ImageTk.PhotoImage(Image.open("assets/create.png").resize((50, 50), Image.ANTIALIAS))
 		create_btn = Button(self, text="Create new entry", image=create_img, anchor="center", compound="left", bd=0, command=lambda: controller.show_frame("DiaryCreateFrame"))
-		create_btn.pack(pady=20)
+		create_btn.pack(pady=10)
 
-	def check_records(self):
-		pass
+		cal = Calendar(self, firstweekday="sunday", showweeknumbers=False, borderwidth=0, date_pattern="yyyy-mm-dd")
+		cal.pack(padx=20, pady=10)
+		print_btn = Button(self, text="Check Entries for the selected date", bd=0, command=lambda: self.check_records(cal.get_date()))
+		print_btn.pack(padx=10, pady=10)
+
+	def check_records(self, date):
+		global entries
+
+		entries = db.fetch_entries(date)
+		self.controller.update_entry_list(date)
+		self.controller.show_frame("EntryListFrame")
+		
 
 
 class DiaryCreateFrame(Frame):
 	def __init__(self, parent, controller):
 		Frame.__init__(self, parent)
+		self.controller = controller
 		# self.grid_rowconfigure(0, weight=1)
 		self.grid_columnconfigure(0, weight=1)
 		self.grid_columnconfigure(1, weight=1)
@@ -161,6 +178,54 @@ class DiaryCreateFrame(Frame):
 			self.var.set(0)
 			self.entry_field.delete("1.0", "end-1c")
 
+			self.controller.show_frame("DiaryFrame")
+
+
+class EntryListFrame(Frame):
+	def __init__(self, parent, controller):
+		Frame.__init__(self, parent)
+		self.controller = controller
+
+		back_btn = Button(self, text="Back", image=back_img, anchor="center", compound="left", bd=0, padx=-10, command=lambda: self.show_prev_frame())
+		back_btn.pack(pady=(0, 20))
+
+
+	def load_content(self, date):
+		self.canvas = Canvas(self)
+		self.scrollbar = Scrollbar(self, orient="vertical", command=self.canvas.yview)
+		inner_frame = Frame(self.canvas)
+		inner_frame.pack(fill="both", expand=True)
+		self.canvas.create_window(0, 0, anchor='center', window=inner_frame, width=self.winfo_width())
+
+		year, month, day = date.split('-')
+		date_label = Label(inner_frame, text=f'Date: {day}-{month}-{year}', anchor="center", bd=0, padx=10, pady=10, font=('calibri', 16)).pack()
+		
+		emoticons = {1: mood_1, 2: mood_2, 3: mood_3, 4: mood_4, 5: mood_5}
+
+		for entry in entries:
+			mood, content, created_at, edited_at = entry
+			time_created_label = Label(inner_frame, text=f"[created at {created_at.strftime('%H:%M')}]", image=emoticons[mood], anchor="center", compound="left", bd=0, padx=10).pack(padx=10, pady=(20,0))
+			entry_label = Label(inner_frame, text=content, anchor="center", bd=0, wraplength=self.winfo_width()-50).pack(padx=10, pady=(0,20))
+
+		if not entries:
+			empty_msg = Label(inner_frame, text="No entries were created for this day", image=emoticons[4], anchor="center", compound="right", bd=0, padx=10, pady=10, wraplength=self.winfo_width()-50)
+			empty_msg.pack(fill="both", expand=True)
+
+		self.canvas.update_idletasks()
+		self.canvas.configure(scrollregion=self.canvas.bbox('all'), yscrollcommand=self.scrollbar.set, width=self.winfo_width()-50)
+		self.canvas.yview_moveto('0.0')
+		self.canvas.pack(fill="both", expand=True, side="left", anchor="center")
+		self.scrollbar.pack(side="right", fill="y")
+
+	def show_prev_frame(self):
+		if self.canvas:
+			self.canvas.destroy()
+		if self.scrollbar:
+			self.scrollbar.destroy()
+
+		self.controller.show_frame("DiaryFrame")
+
+		
 
 
 if __name__ == "__main__":
