@@ -48,7 +48,7 @@ class Homescreen(Frame):
 		global diary_img, todo_img
 
 		image = Label(self, image=andy, text="Hii, my name is Andy, your personal diary and to-do app. ^_^", compound="top")
-		image.pack()
+		image.pack(pady=(20, 0))
 
 		diary_img = ImageTk.PhotoImage(Image.open("assets/diary.png").resize((60, 60), Image.ANTIALIAS))
 		diary_btn = Button(self, text="Diary", image=diary_img, anchor="center", height=100, width=100, compound="top", bd=0, command=lambda: controller.show_frame("DiaryFrame"))
@@ -197,7 +197,8 @@ class EntryListFrame(Frame):
 		inner_frame.pack(fill="both", expand=True)
 		self.canvas.create_window(0, 0, anchor='center', window=inner_frame, width=self.winfo_width())
 
-		year, month, day = date.split('-')
+		self.date = date
+		year, month, day = self.date.split('-')
 		date_label = Label(inner_frame, text=f'Date: {day}-{month}-{year}', anchor="center", bd=0, padx=10, pady=10, font=('calibri', 16)).pack()
 		
 		emoticons = {1: mood_1, 2: mood_2, 3: mood_3, 4: mood_4, 5: mood_5}
@@ -212,19 +213,25 @@ class EntryListFrame(Frame):
 			empty_msg.pack(fill="both", expand=True)
 
 		self.canvas.update_idletasks()
-		self.canvas.configure(scrollregion=self.canvas.bbox('all'), yscrollcommand=self.scrollbar.set, width=self.winfo_width()-50)
+		self.canvas.configure(scrollregion=self.canvas.bbox('all'), yscrollcommand=self.scrollbar.set)
 		self.canvas.yview_moveto('0.0')
+		self.bind("<Configure>", self.on_resize)
 		self.canvas.pack(fill="both", expand=True, side="left", anchor="center")
 		self.scrollbar.pack(side="right", fill="y")
 
+	def on_resize(self, event):
+		self.destroy_all()
+		self.load_content(self.date)
+
 	def show_prev_frame(self):
+		self.destroy_all()
+		self.controller.show_frame("DiaryFrame")
+
+	def destroy_all(self):
 		if self.canvas:
 			self.canvas.destroy()
 		if self.scrollbar:
 			self.scrollbar.destroy()
-
-		self.controller.show_frame("DiaryFrame")
-
 		
 
 
