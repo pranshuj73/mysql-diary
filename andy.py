@@ -200,11 +200,17 @@ class EntryListFrame(Frame):
 	def __init__(self, parent, controller):
 		Frame.__init__(self, parent)
 		self.controller = controller
+		self.pack_propagate(False)
 
 		back_btn = Button(self, text="Back", image=back_img, anchor="center", compound="left", bd=0, padx=-10, command=lambda: self.show_prev_frame())
 		back_btn.pack(pady=(0, 20))
 
 	def load_content(self, date):
+		try:
+			self.destroy_all()
+		except:
+			pass
+
 		self.canvas = Canvas(self)
 		self.scrollbar = Scrollbar(self, orient="vertical", command=self.canvas.yview)
 		inner_frame = Frame(self.canvas)
@@ -268,7 +274,7 @@ class TodoFrame(Frame):
 
 		add_task_img = ImageTk.PhotoImage(Image.open("assets/todo_add_new.png").resize((30, 30), Image.ANTIALIAS))
 		add_task_btn = Button(self, text="Add new task", image=add_task_img, anchor="center", compound="left", bd=0, command=lambda: controller.show_frame("TaskCreateFrame"))
-		add_task_btn.pack(pady=10)
+		add_task_btn.pack()
 
 	def load_tasks(self):
 		try:
@@ -279,44 +285,39 @@ class TodoFrame(Frame):
 		self.canvas = Canvas(self)
 		self.scrollbar = Scrollbar(self, orient="vertical", command=self.canvas.yview)
 		task_frame = Frame(self.canvas, height=self.winfo_height()-100)
-		task_frame.pack(fill="both", expand=True)
-		self.canvas.create_window(0, 0, anchor='center', window=task_frame, width=self.winfo_width(), height=self.winfo_height()-100)
+		task_frame.pack(fill="x", expand=True)
+		self.canvas.create_window(0, 0, anchor='center', window=task_frame, width=self.winfo_width())
 
-		self.incomplete_tasks = list(enumerate(db.fetch_incomplete_tasks(), start=1))
+		priority_colors = ("#00CED1", "#00FA9A", "#FF6347", "#B0C4DE")
+		self.incomplete_tasks = sorted(db.fetch_incomplete_tasks(), key=lambda x: x[2])
 		if self.incomplete_tasks:
-			incomplete_task_label = Label(task_frame, text="Incomplete Tasks", font=('calibri', 16)).pack(pady=(0,10), anchor="center")
-			self.incomplete_task_listbox = Listbox(task_frame, bd=0, bg=self.cget('bg'), highlightbackground=self.cget('bg'))
-			for pos, task in self.incomplete_tasks:
+			incomplete_task_label = Label(task_frame, text="Incomplete Tasks", font=('calibri', 16))
+			incomplete_task_label.pack(pady=10, padx=(50, 0), anchor="center")
+			for task in self.incomplete_tasks:
 				title, description, priority, status = task
-				self.incomplete_task_listbox.insert(pos, title)
+				task_btn = Button(task_frame, text=title, bg=priority_colors[priority-1], bd=0, width=25, wraplength=400, justify="left", anchor="w", pady=5, command=lambda task=task: self.get_task(task))
+				task_btn.pack(expand=True, padx=(50,0))
 
-			self.incomplete_task_listbox.config(height=len(self.incomplete_tasks)+1)
-			self.incomplete_task_listbox.bind('<<ListboxSelect>>', lambda e: self.get_task(e, 0))
-			self.incomplete_task_listbox.pack()
+			self.completed_tasks = db.fetch_completed_tasks()
+			if self.completed_tasks:
+				global done_icon
+				done_icon = ImageTk.PhotoImage(Image.open("assets/done.png").resize((25, 25), Image.ANTIALIAS))
+				completed_task_label = Label(task_frame, text="Completed Tasks", font=('calibri', 16)).pack(padx=(50,0), pady=10, anchor="center")
+				for task in self.completed_tasks:
+					title, description, priority, status = task
+					task_btn = Button(task_frame, text=title, image=done_icon, compound="left", bd=0, width=200, wraplength=400, justify="left", anchor="w", pady=5, command=lambda task=task: self.get_task(task))
+					task_btn.pack(expand=True, padx=(50,0))
 
 		else:
 			global no_task_img
 			no_task_img = ImageTk.PhotoImage(Image.open("assets/no_task.png").resize((340, 160), Image.ANTIALIAS))
-			all_complete = Label(task_frame, text="You're all caught up!", image=no_task_img, compound="top", font=('calibri', 16), pady=10).pack(padx=(50,0))
-
-
-		self.completed_tasks = list(enumerate(db.fetch_completed_tasks(), start=1))
-		if self.completed_tasks:
-			completed_task_label = Label(task_frame, text="Completed Tasks", font=('calibri', 16)).pack(pady=(0,10), anchor="center")
-			self.completed_task_listbox = Listbox(task_frame, bd=0, bg=self.cget('bg'), highlightbackground=self.cget('bg'))
-			for pos, task in self.completed_tasks:
-				title, description, priority, status = task
-				self.completed_task_listbox.insert(pos, title)
-
-			self.completed_task_listbox.config(height=len(self.completed_tasks)+1)
-			self.completed_task_listbox.bind('<<ListboxSelect>>', lambda e: self.get_task(e, 1))
-			self.completed_task_listbox.pack()
+			all_complete = Label(task_frame, text="You're all caught up!", image=no_task_img, compound="top", font=('calibri', 16)).pack(padx=(50,0), pady=10)
 
 		self.canvas.update_idletasks()
 		self.canvas.configure(scrollregion=self.canvas.bbox('all'), yscrollcommand=self.scrollbar.set)
 		self.canvas.yview_moveto('0.0')
 		self.bind("<Configure>", self.on_resize)
-		self.canvas.pack(fill="both", side="left", expand=True, anchor="center")
+		self.canvas.pack(fill="both", side="left", expand=True, anchor="center", pady=(0, 20))
 		self.scrollbar.pack(side="right", fill="y")
 
 	def on_resize(self, event):
@@ -329,14 +330,9 @@ class TodoFrame(Frame):
 		if self.scrollbar:
 			self.scrollbar.destroy()
 
-	def get_task(self, event, status):
-		w = event.widget
-		if w.curselection():
-			index = int(w.curselection()[0])
-			pos, task = self.incomplete_tasks[index] if status == 0 else self.completed_tasks[index] if status == 1 else (None, None)
-			self.controller.edit_task_frame(task)
-			self.controller.show_frame("TaskEditFrame")
-
+	def get_task(self, task):
+		self.controller.edit_task_frame(task)
+		self.controller.show_frame("TaskEditFrame")
 
 
 class TaskCreateFrame(Frame):
@@ -434,8 +430,8 @@ class TaskEditFrame(Frame):
 		self.title_label.grid(row=1, column=0, columnspan=2)
 		self.description_label.grid(row=2, column=0, columnspan=2)
 		self.priority_label.grid(row=3, column=0, columnspan=2)
-		self.change_status_btn.grid(row=4, column=0, pady=(30, 0), padx=10)
-		self.delete_btn.grid(row=4, column=1, pady=(30, 0), padx=10)
+		self.change_status_btn.grid(row=4, column=0, pady=(30, 0), padx=10, sticky="e")
+		self.delete_btn.grid(row=4, column=1, pady=(30, 0), padx=10, sticky="w")
 
 	def load_data(self, task):
 		title, description, priority, status = task
@@ -464,8 +460,6 @@ class TaskEditFrame(Frame):
 		db.change_status(task, new_status)
 		task = list(task)
 		task[3] = new_status
-		label_txt = {0: "Mark as Completed", 1: "Mark Incomplete"}
-		self.change_status_btn.config(text=label_txt[new_status])
 		self.load_data(task)
 
 

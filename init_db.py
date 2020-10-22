@@ -5,6 +5,8 @@ db = connector.connect(host="localhost",
 	password="pj@#9801"
 )
 
+
+
 cur.execute("CREATE DATABASE andy;")
 
 db = connector.connect(host="localhost",

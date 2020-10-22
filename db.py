@@ -43,3 +43,4 @@ def change_status(task, new_status):
 def del_task(task):
 	title, description, priority, status = task
 	cur.execute(f"delete from todo where title='{title}' and description='{description}' and priority={priority} and status={status};")
+	db.commit()
