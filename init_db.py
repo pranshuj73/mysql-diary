@@ -1,18 +1,16 @@
 import mysql.connector as connector
+import os
 
 db = connector.connect(host="localhost",
-	user="volt",
-	password="pj@#9801"
+	user=os.environ.get('MYSQL_USERNAME'),
+	password=os.environ.get('MYSQL_PASSWORD')
 )
-
-
-
 cur.execute("CREATE DATABASE andy;")
 
 db = connector.connect(host="localhost",
-	user="volt",
-	password="pj@#9801",
-	database="cs_project"
+	user=os.environ.get('MYSQL_USERNAME'),
+	password=os.environ.get('MYSQL_PASSWORD'),
+	database="andy"
 )
 cur = db.cursor()
 cur.execute("CREATE TABLE diary(mood int, entry varchar(5000), dt datetime, last_edited datetime);")
