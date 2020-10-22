@@ -1,5 +1,5 @@
 <p align="center">
-	<a href="https://github.com/volt9801/cs-project">
+	<a href="https://github.com/volt9801/andy">
 	    <img src="assets/Andy.png" alt="Logo" width="156" height="126">
 	</a>
 
