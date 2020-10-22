@@ -7,8 +7,12 @@
 <p align="center">Andy uses MySQL as database to store your diary entries as well as your tasks in the to-do list.</p>
 </p>
 
+---
+
 ### About the Project
 I created Andy for my school project and to learn more about gui programming with python. Andy uses tkinter for its interface and mysql as the database where it stores diary entries and tasks
+
+---
 
 ### Getting Started
 To be able to use Andy, the following things need to be set up first-
@@ -27,6 +31,8 @@ Open the `.env` file in the root directory of the project and change the values 
 To initialise the database, run `init_db.py` and thats it! You're good to go now!
 
 Run `andy.py` to use the program.
+
+---
 
 ### Credits
 + Credits for Icons:
