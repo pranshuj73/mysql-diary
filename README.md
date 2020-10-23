@@ -4,13 +4,13 @@
 	</a>
 
 <h2 align="center">Andy - Diary & To-Do</h2>
-<p align="center">Andy uses MySQL as database to store your diary entries as well as your tasks in the to-do list.</p>
+<p align="center">Andy uses SQLite as database to store your diary entries as well as your tasks in the to-do list.</p>
 </p>
 
 ---
 
 ### About the Project
-I created Andy for my school project and to learn more about gui programming with python. Andy uses tkinter for its interface and mysql as the database where it stores diary entries and tasks
+I created Andy for my school project and to learn more about gui programming with python. Andy uses tkinter for its interface and SQLite as the database where it stores diary entries and tasks
 
 ---
 
@@ -24,13 +24,8 @@ Run the following command to install the libraries needed for this project:
 
 `$ pip3 install -r requirements.txt  # for linux and mac`
 
-##### Setting up the environment variables
-Open the `.env` file in the root directory of the project and change the values of `MYSQL_USERNAME` and `MYSQL_PASSWORD` to your MySQL username and password respectively.
-
-##### Initializing the database
-To initialise the database, run `init_db.py` and thats it! You're good to go now!
-
-Run `andy.py` to use the program.
+and that's it!
+Now, run `andy.py` to use the program.
 
 ---
 

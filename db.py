@@ -1,14 +1,10 @@
-import mysql.connector as connector
+import sqlite3 as sl
 import os
 from dotenv import load_dotenv
 
 load_dotenv()
 
-db = connector.connect(host="localhost",
-	user=os.environ.get('MYSQL_USERNAME'),
-	password=os.environ.get('MYSQL_PASSWORD'),
-	database="andy"
-)
+db = sl.connect("andy.db")
 cur = db.cursor()
 
 
