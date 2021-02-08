@@ -1,4 +1,4 @@
-import mysql.connector as connector
+import sqlite3 as sl
 import os
 from dotenv import load_dotenv
 
@@ -9,6 +9,7 @@ db = connector.connect(
     user=os.environ.get("MYSQL_USERNAME"),
     password=os.environ.get("MYSQL_PASSWORD"),
 )
+
 cur = db.cursor()
 cur.execute("CREATE DATABASE andy;")
 print("Database created successfully!")
@@ -19,6 +20,7 @@ db = connector.connect(
     password=os.environ.get("MYSQL_PASSWORD"),
     database="andy",
 )
+
 cur = db.cursor()
 cur.execute(
     "CREATE TABLE diary(mood int, entry varchar(5000), dt datetime, last_edited datetime);"

@@ -1,4 +1,4 @@
-import mysql.connector as connector
+import sqlite3 as sl
 import os
 from dotenv import load_dotenv
 
@@ -10,7 +10,6 @@ db = connector.connect(
     password=os.environ.get("MYSQL_PASSWORD"),
     database="andy",
 )
-cur = db.cursor()
 
 
 # functions for diary table
